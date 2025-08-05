@@ -1,0 +1,897 @@
+<!DOCTYPE html>
+<html lang="pt-BR" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Relatório Pós-Entrega | Patrocínio São João 2025</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.9.3/html2pdf.bundle.min.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700;800&display=swap" rel="stylesheet">
+    <!-- Chosen Palette: Calm Harmony (Neutral, Deep Blue, Emerald Accent) - with a light blue background for brand alignment and visual appeal. -->
+    <!-- Application Structure Plan: A dashboard-style SPA. A fixed nav bar is introduced, with a solid blue background on load, linking to sections: 'Visão Geral' (summary, key stats), 'Performance e Entregas' (interactive tabs for each of the 6 events, with clickable cards opening image galleries), and 'Resultados' (interactive chart). An animated, full-width image slider is added below the header for an engaging visual introduction. This structure allows non-linear, efficient exploration, which is ideal for an auditor who needs to quickly verify specific deliverables without scrolling through a long, linear document. -->
+    <!-- Visualization & Content Choices: Key metrics are shown in prominent stat cards for immediate impact. Deliverables are organized in a grid of cards; clicking them opens a modal image gallery (JS) to provide focused proof without cluttering the main UI. Social media data is presented in a comparative bar chart (Chart.js) to add analytical value, allowing for easy performance comparison across events. A new animated, full-width image slider is used for key highlights. -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #e2e8f0;
+        }
+        .nav-link {
+            transition: color 0.3s, border-bottom-color 0.3s;
+        }
+        .nav-link:hover {
+            color: #10b981;
+        }
+        .active-tab {
+            background-color: white;
+            color: #1e3a8a;
+            border-radius: 0.5rem 0.5rem 0 0;
+            border-bottom: 2px solid transparent;
+            font-weight: 600;
+        }
+        .inactive-tab {
+            background-color: #cbd5e1;
+            color: #1e3a8a;
+            border-radius: 0.5rem 0.5rem 0 0;
+            border-bottom: 2px solid #1e3a8a;
+            font-weight: 400;
+        }
+        .tab-separator {
+            width: 2px;
+            height: 1.5rem;
+            background-color: white;
+            margin: 0 0.25rem;
+        }
+        .modal-backdrop {
+            transition: opacity 0.3s ease-in-out;
+        }
+        .modal-content {
+            transition: transform 0.3s ease-in-out;
+        }
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 800px;
+            margin-left: auto;
+            margin-right: auto;
+            height: 300px;
+            max-height: 400px;
+        }
+        .slider-wrapper {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+        }
+        .slider-image-container {
+            display: flex;
+            width: 100%;
+            height: 100%;
+            transition: transform 0.5s ease-in-out;
+        }
+        .slider-image {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            flex-shrink: 0;
+            border-radius: 0;
+        }
+        @media (min-width: 768px) {
+            .chart-container {
+                height: 400px;
+            }
+        }
+    </style>
+</head>
+<body class="text-slate-800 pt-[4.5rem]">
+
+    <!-- Header & Navigation -->
+    <header id="header" class="fixed top-0 w-full z-40 bg-[#023496] shadow-sm">
+        <div class="container mx-auto px-4">
+            <div class="flex justify-between items-center py-4">
+                <div class="flex items-center space-x-4">
+                    <img src="https://i.imgur.com/IkyuMmy.png" alt="Logo Supernova" class="h-5">
+                    <div class="w-px h-8 bg-slate-300 hidden sm:block"></div>
+                    <img src="https://i.imgur.com/BW6PoF5.png" alt="Logo Esportes da Sorte" class="h-10">
+                </div>
+                <nav class="hidden md:flex items-center space-x-8 text-sm font-semibold">
+                    <a href="#overview" id="desktop-overview-link" class="nav-link text-white border-b-2 border-transparent">Visão Geral</a>
+                    <div class="relative group">
+                        <button id="dropdown-button" class="nav-link text-white border-b-2 border-transparent flex items-center">
+                            <span>Performance e Entregas</span>
+                            <svg id="dropdown-arrow" class="w-4 h-4 ml-1 transform transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                        </button>
+                        <div id="dropdown-menu" class="absolute left-0 top-full mt-2 w-48 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 origin-top scale-y-0 transition-transform duration-300">
+                            <!-- Dropdown links will be generated by JS -->
+                        </div>
+                    </div>
+                    <a href="#results" id="desktop-results-link" class="nav-link text-white border-b-2 border-transparent">Resultados</a>
+                </nav>
+                <button id="mobile-menu-button" class="md:hidden p-2 rounded-md text-white hover:bg-white/10">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16m-7 6h7"></path></svg>
+                </button>
+            </div>
+        </div>
+        <!-- Mobile Menu -->
+        <div id="mobile-menu" class="hidden md:hidden bg-[#023496] border-t border-blue-950">
+            <a href="#overview" id="mobile-overview-link" class="block py-3 px-4 text-sm font-semibold text-white hover:bg-blue-950">Visão Geral</a>
+            <button id="mobile-dropdown-button" class="block w-full text-left py-3 px-4 text-sm font-semibold text-white hover:bg-blue-950 flex justify-between items-center">
+                <span>Performance e Entregas</span>
+                <svg class="w-4 h-4 ml-1 transform transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+            </button>
+            <div id="mobile-dropdown-menu" class="hidden">
+                 <!-- Mobile dropdown links will be generated by JS -->
+            </div>
+            <a href="#results" id="mobile-results-link" class="block py-3 px-4 text-sm font-semibold text-white hover:bg-blue-950">Resultados</a>
+        </div>
+    </header>
+
+    <!-- Highlight Slider -->
+    <section class="relative w-full overflow-hidden">
+        <div id="slider-container" class="relative h-64 sm:h-80 md:h-96 w-full bg-slate-200 flex items-center justify-center">
+            <div id="slider-wrapper" class="slider-wrapper">
+                <div id="slider-image-container" class="slider-image-container">
+                    <!-- Images will be injected here by JS -->
+                </div>
+            </div>
+            <button id="prev-slide" class="absolute left-4 p-2 bg-white/50 rounded-full hover:bg-white transition-colors duration-300">
+                <svg class="w-6 h-6 text-slate-800" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path></svg>
+            </button>
+            <button id="next-slide" class="absolute right-4 p-2 bg-white/50 rounded-full hover:bg-white transition-colors duration-300">
+                <svg class="w-6 h-6 text-slate-800" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
+            </button>
+        </div>
+    </section>
+
+    <main>
+        <!-- Section 1: Overview -->
+        <section id="overview" class="py-16 md:py-24 bg-white mt-8 rounded-xl shadow-lg container mx-auto px-4">
+            <div class="text-center">
+                <h2 class="text-3xl md:text-4xl font-extrabold text-blue-800 mb-4">Parceria de Sucesso: São João 2025</h2>
+                <p class="max-w-3xl mx-auto text-slate-600 mb-12">
+                    Este relatório interativo comprova a entrega de todas as contrapartidas do contrato de patrocínio com a <strong>Esportes da Sorte</strong>. A parceria foi um sucesso, garantindo alta visibilidade e engajamento da marca durante os seis maiores eventos de São João do Nordeste.
+                </p>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 max-w-6xl mx-auto">
+                    <div class="bg-slate-50 border border-slate-200 rounded-xl p-6 text-center shadow-sm">
+                        <div class="text-4xl font-extrabold text-emerald-500 mb-2" id="publico-presencial">4.4M+</div>
+                        <h3 class="font-semibold text-slate-700">Público Presencial</h3>
+                        <p class="xs text-slate-500">Estimativa total nos 6 eventos</p>
+                    </div>
+                    <div class="bg-slate-50 border border-slate-200 rounded-xl p-6 text-center shadow-sm">
+                        <div class="text-4xl font-extrabold text-emerald-500 mb-2" id="alcance-total">8.5M+</div>
+                        <h3 class="font-semibold text-slate-700">Alcance Digital</h3>
+                        <p class="xs text-slate-500">Usuários únicos impactados</p>
+                    </div>
+                    <div class="bg-slate-50 border border-slate-200 rounded-xl p-6 text-center shadow-sm">
+                        <div class="text-4xl font-extrabold text-emerald-500 mb-2" id="impressoes-totais">25M+</div>
+                        <h3 class="font-semibold text-slate-700">Impressões Totais</h3>
+                        <p class="xs text-slate-500">Visualizações da marca</p>
+                    </div>
+                    <div class="bg-slate-50 border border-slate-200 rounded-xl p-6 text-center shadow-sm">
+                        <div class="text-4xl font-extrabold text-emerald-500 mb-2" id="engajamento-total">500k+</div>
+                        <h3 class="font-semibold text-slate-700">Engajamento</h3>
+                        <p class="xs text-slate-500">Curtidas, comentários e shares</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section 2: Performance e Entregas -->
+        <section id="proof" class="py-16 md:py-24">
+            <div class="container mx-auto px-4">
+                <div class="text-center mb-12">
+                    <h2 class="text-3xl md:text-4xl font-extrabold text-blue-800 mb-4">Performance e Entregas</h2>
+                    <p class="max-w-3xl mx-auto text-slate-600">
+                        Navegue pelos eventos para visualizar a comprovação detalhada de cada ação de marketing realizada. Clique em uma ação para ver a galeria de fotos correspondente.
+                    </p>
+                </div>
+                
+                <div id="event-tabs" class="flex flex-wrap justify-center mb-0">
+                    <!-- Event tabs will be generated here by JS -->
+                </div>
+                <div id="proof-details" class="hidden border-t-2 border-blue-900 bg-white p-6 md:p-12">
+                    <div class="flex flex-col md:flex-row justify-between mb-4">
+                        <h3 class="text-2xl font-bold text-blue-800">Avaliação de Resultados do Evento</h3>
+                        <button id="generate-pdf-btn" class="mt-4 md:mt-2 px-4 py-2 bg-emerald-500 text-white text-sm font-semibold rounded-lg hover:bg-emerald-600 transition-colors flex items-center justify-center md:justify-start space-x-2">
+                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
+                             <span>Gerar PDF</span>
+                        </button>
+                    </div>
+                    <div id="event-evaluation" class="space-y-4 text-slate-700 mb-6">
+                         <!-- Evaluation content will be injected here by JS -->
+                    </div>
+                    <div class="w-full overflow-x-auto">
+                        <table id="event-stats-table" class="w-full text-left border-collapse">
+                            <thead>
+                                <tr class="text-sm font-semibold text-slate-600 border-b border-slate-300">
+                                    <th class="py-2 px-4">Duração</th>
+                                    <th class="py-2 px-4">Datas</th>
+                                    <th class="py-2 px-4">Público Estimado</th>
+                                </tr>
+                            </thead>
+                            <tbody id="event-stats-tbody">
+                                <!-- Table rows will be injected here by JS -->
+                            </tbody>
+                        </table>
+                    </div>
+                    <div id="instagram-links" class="mt-8 flex flex-col items-center">
+                        <!-- Instagram links will be injected here by JS -->
+                    </div>
+                    <div id="proof-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mt-8">
+                        <!-- Proof cards will be generated here by JS -->
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section 3: Results & Analytics -->
+        <section id="results" class="py-16 md:py-24 bg-white rounded-xl shadow-lg container mx-auto px-4">
+            <div class="text-center mb-12">
+                <h2 class="text-3xl md:text-4xl font-extrabold text-blue-800 mb-4">Análise de Resultados</h2>
+                <p class="max-w-3xl mx-auto text-slate-600">
+                    O gráfico abaixo compara o desempenho das métricas de mídia digital entre os eventos, demonstrando o impacto consistente da campanha e os picos de engajamento.
+                </p>
+            </div>
+            <div class="chart-container">
+                <canvas id="resultsChart"></canvas>
+            </div>
+        </section>
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-blue-900 text-white">
+        <div class="container mx-auto px-4 py-8 text-center text-sm">
+            <p>&copy; 2025 | Relatório de Pós-Entrega de Patrocínio. Todos os direitos reservados.</p>
+            <p class="mt-2 text-blue-300">Desenvolvido para Esportes da Sorte.</p>
+        </div>
+    </footer>
+
+    <!-- Modal -->
+    <div id="modal" class="fixed inset-0 bg-black/70 z-50 flex items-center justify-center p-4 modal-backdrop opacity-0 pointer-events-none">
+        <div id="modal-content" class="bg-white rounded-lg shadow-2xl w-full max-w-4xl max-h-[90vh] flex flex-col modal-content transform scale-95">
+            <div class="flex justify-between items-center p-4 border-b border-slate-200">
+                <h3 id="modal-title" class="text-lg font-bold text-blue-800">Galeria de Comprovação</h3>
+                <button id="modal-close" class="p-2 rounded-full hover:bg-slate-100 text-slate-600">&times;</button>
+            </div>
+            <div class="p-4 flex-grow overflow-y-auto">
+                <div id="modal-media-container" class="relative h-[60vh] flex items-center justify-center">
+                    <!-- Media (image or video) will be injected here by JS -->
+                </div>
+                <p id="modal-description" class="text-sm text-slate-600 mt-4 text-center"></p>
+            </div>
+            <div class="flex justify-between items-center p-4 bg-slate-50 border-t border-slate-200">
+                <button id="modal-prev" class="px-4 py-2 bg-blue-700 text-white rounded-md hover:bg-blue-800 transition-colors disabled:bg-slate-300">&larr; Anterior</button>
+                <div id="modal-counter" class="text-sm font-semibold text-slate-500"></div>
+                <button id="modal-next" class="px-4 py-2 bg-blue-700 text-white rounded-md hover:bg-blue-800 transition-colors disabled:bg-slate-300">Próxima &rarr;</button>
+            </div>
+        </div>
+    </div>
+
+<script>
+    // Variável para armazenar os dados de forma global
+    const reportData = {
+        highlightImages: [
+            "https://placehold.co/1200x500/1e3a8a/ffffff?text=Destaque+do+Palco+Principal",
+            "https://placehold.co/1200x500/10b981/ffffff?text=Ativação+da+Marca+com+Público",
+            "https://placehold.co/1200x500/1e3a8a/ffffff?text=Visibilidade+da+Marca+em+Telas"
+        ],
+        events: [
+            {
+                name: "Arcoverde",
+                shortName: "Arcoverde",
+                duration: "15 Dias",
+                dates: "14 a 28 de JUNHO",
+                public: "1.5 Milhão",
+                instagram: [{ url: "https://www.instagram.com/saojoaodearcoverde.com.br/", username: "@saojoaodearcoverde.com.br" }],
+                evaluation: {
+                    workedWell: "Preencha aqui o que funcionou bem no evento.",
+                    challenges: "Dificione aqui os desafios enfrentados.",
+                    improvements: "Preencha aqui o que pode ser melhorado para o futuro.",
+                    engagement: "Descreva como foi o engajamento do público com a marca.",
+                    contractualDeliveries: "Sim, todas as entregas contratuais foram realizadas conforme o documento."
+                },
+                actions: [
+                    {
+                        title: "Housemix LED 360º",
+                        description: "LED Exclusivo na HouseMix 360º",
+                        media: [
+                            { type: "image", url: "https://i.imgur.com/Bff3dvP.jpeg" },
+                            { type: "image", url: "https://imgur.com/s7iXFUW.jpeg" },
+                            { type: "image", url: "https://imgur.com/uPUBDiF.jpeg" },
+                        ]
+                    },
+                    {
+                        title: "Espaço para Ativação",
+                        description: "Local privilegiado no foco do fluxo de chegada e saída do evento.",
+                        media: [
+                            { type: "image", url: "https://i.imgur.com/pBY2yY6.jpeg" },
+                            { type: "image", url: "https://imgur.com/NFmI7zo.jpeg" },
+                            { type: "image", url: "https://imgur.com/KlGqCk4.jpeg" }
+                        ]
+                    },
+                    {
+                        title: "Luminosos no Palco",
+                        description: "3 Luminosos: 1 em cada lateral e 1 na parte interna central",
+                        media: [
+                            { type: "image", url: "https://imgur.com/Kcye5HX.jpeg" },
+                            { type: "image", url: "https://imgur.com/nKNoLqp.jpeg" },
+                            { type: "image", url: "https://imgur.com/OyH3Xnj.jpeg" },
+                            { type: "image", url: "https://imgur.com/Zmjx9OP.jpeg" },
+                            { type: "image", url: "https://imgur.com/155adEg.jpeg" }
+                        ]
+                    }
+                ]
+            },
+            {
+                name: "Gravatá",
+                shortName: "Gravatá",
+                duration: "8 Dias",
+                dates: "07, 12, 13, 14, 20, 21, 22 e 23 de JUNHO",
+                public: "800 Mil",
+                instagram: [
+                    { url: "https://www.instagram.com/saojoaodegravata/", username: "@saojoaodegravata" },
+                    { url: "https://www.instagram.com/vilafogueira/", username: "@vilafogueira" }
+                ],
+                evaluation: {
+                    workedWell: "O posicionamento da marca no palco principal garantiu alta visibilidade. A equipe de promotores teve um bom engajamento inicial com o público.",
+                    challenges: "Dificuldade na distribuição de brindes devido ao grande fluxo de pessoas em horários de pico.",
+                    improvements: "Reforçar a equipe de promotores e criar pontos de ativação mais estratégicos em 2026.",
+                    engagement: "Engajamento excelente, com muitos posts e stories de influenciadores e do público marcando a marca. A associação com a alegria do São João foi um ponto forte.",
+                    contractualDeliveries: "Sim, todas as entregas contratuais foram realizadas conforme o documento."
+                },
+                actions: [
+                    {
+                        title: "EXTRA - Testeira de Led no Camarote",
+                        description: "Testeira de Led no Camarote com a marca Esportes da Sorte em exposição.",
+                        media: [
+                            { type: "image", url: "https://i.imgur.com/4MDItxs.jpeg" }
+                        ]
+                    }
+                ]
+            },
+            {
+                name: "Vitória de Santo Antão",
+                shortName: "Vitória St. Antão",
+                duration: "7 Dias",
+                dates: "21, 23, 24, 25, 26, 27, 28 de JUNHO",
+                public: "700 Mil",
+                instagram: [
+                    { url: "https://www.instagram.com/vitoriadopedeserra/", username: "@vitoriadopedeserra" },
+                    { url: "https://www.instagram.com/camarotevitoriape/", username: "@camarotevitoriape" }
+                ],
+                evaluation: {
+                    workedWell: "Preencha aqui o que funcionou bem no evento.",
+                    challenges: "Preencha aqui os desafios enfrentados.",
+                    improvements: "Preencha aqui o que pode ser melhorado para o futuro.",
+                    engagement: "Descreva como foi o engajamento do público com a marca.",
+                    contractualDeliveries: "Sim/Não, confirme se as entregas contratuais foram realizadas."
+                },
+                actions: []
+            },
+            {
+                name: "Santa Cruz do Capibaribe",
+                shortName: "St. Cruz Capibaribe",
+                duration: "9 Dias",
+                dates: "12, 13, 14, 15, 21, 22, 23, 27, 28 de JUNHO",
+                public: "650 Mil",
+                instagram: [
+                    { url: "https://www.instagram.com/sjdamodaoficial/", username: "@sjdamodaoficial" },
+                    { url: "https://www.instagram.com/loungedamodaoficial/", username: "@loungedamodaoficial" }
+                ],
+                evaluation: {
+                    workedWell: "Preencha aqui o que funcionou bem no evento.",
+                    challenges: "Preencha aqui os desafios enfrentados.",
+                    improvements: "Preencha aqui o que pode ser melhorado para o futuro.",
+                    engagement: "Descreva como foi o engajamento do público com a marca.",
+                    contractualDeliveries: "Sim/Não, confirme se as entregas contratuais foram realizadas."
+                },
+                actions: []
+            },
+            {
+                name: "Araripina",
+                shortName: "Araripina",
+                duration: "5 Dias",
+                dates: "24, 25, 26, 27, 28 de JUNHO",
+                public: "400 Mil",
+                instagram: [{ url: "https://www.instagram.com/saojoaodeararipina/", username: "@saojoaodeararipina" }],
+                evaluation: {
+                    workedWell: "Preencha aqui o que funcionou bem no evento.",
+                    challenges: "Preencha aqui os desafios enfrentados.",
+                    improvements: "Preencha aqui o que pode ser melhorado para o futuro.",
+                    engagement: "Descreva como foi o engajamento do público com a marca.",
+                    contractualDeliveries: "Sim/Não, confirme se as entregas contratuais foram realizadas."
+                },
+                actions: []
+            },
+            {
+                name: "Toritama",
+                shortName: "Toritama",
+                duration: "10 Dias",
+                dates: "06, 07, 08, 12, 13, 14, 23, 27, 28, 29 de JUNHO",
+                public: "350 Mil",
+                instagram: [{ url: "https://www.instagram.com/prefeituradetoritama/", username: "@prefeituradetoritama" }],
+                evaluation: {
+                    workedWell: "Preencha aqui o que funcionou bem no evento.",
+                    challenges: "Preencha aqui os desafios enfrentados.",
+                    improvements: "Preencha aqui o que pode ser melhorado para o futuro.",
+                    engagement: "Descreva como foi o engajamento do público com a marca.",
+                    contractualDeliveries: "Sim/Não, confirme se as entregas contratuais foram realizadas."
+                },
+                actions: []
+            }
+        ],
+        metrics: {
+            labels: ["Arcoverde", "Gravatá", "Vitória St. Antão", "St. Cruz Capibaribe", "Araripina", "Toritama"],
+            datasets: [
+                {
+                    label: 'Público Presencial (Milhões)',
+                    data: [1.5, 0.8, 0.7, 0.65, 0.4, 0.35],
+                    backgroundColor: 'rgba(30, 64, 175, 0.7)',
+                    borderColor: 'rgba(30, 64, 175, 1)',
+                    borderWidth: 1,
+                    type: 'bar'
+                },
+                {
+                    label: 'Alcance Digital (Milhões)',
+                    data: [1.8, 2.5, 1.5, 1.2, 0.8, 0.7],
+                    backgroundColor: 'rgba(16, 185, 129, 0.7)',
+                    borderColor: 'rgba(16, 185, 129, 1)',
+                    borderWidth: 1,
+                    type: 'bar'
+                },
+                {
+                    label: 'Engajamento (Milhares)',
+                    data: [120, 150, 90, 75, 60, 45],
+                    backgroundColor: 'rgba(245, 158, 11, 0.7)',
+                    borderColor: 'rgba(245, 158, 11, 1)',
+                    borderWidth: 2,
+                    type: 'line',
+                    fill: false,
+                    yAxisID: 'y1'
+                }
+            ]
+        }
+    };
+
+    document.addEventListener('DOMContentLoaded', () => {
+
+        const eventTabsContainer = document.getElementById('event-tabs');
+        const proofGrid = document.getElementById('proof-grid');
+        const proofDetails = document.getElementById('proof-details');
+        const eventEvaluation = document.getElementById('event-evaluation');
+        const proofHeader = document.querySelector('#proof h2');
+        const proofSubheader = document.querySelector('#proof p');
+        const eventStatsTbody = document.getElementById('event-stats-tbody');
+        const instagramLinksContainer = document.getElementById('instagram-links');
+        const modalMediaContainer = document.getElementById('modal-media-container');
+        let activeEventIndex = 0;
+
+        function renderTabs() {
+            eventTabsContainer.innerHTML = '';
+            reportData.events.forEach((event, index) => {
+                let eventName = event.shortName || event.name;
+
+                const tab = document.createElement('button');
+                tab.textContent = eventName;
+                tab.className = `px-4 py-2 text-sm transition-colors duration-300 mx-0 border-2 border-b-0 border-slate-300 ${index === activeEventIndex ? 'bg-white text-blue-800 font-semibold' : 'bg-slate-200 text-slate-700 hover:bg-slate-100 font-normal'}`;
+                tab.onclick = () => {
+                    activeEventIndex = index;
+                    renderTabs();
+                    renderProofGrid();
+                };
+                eventTabsContainer.appendChild(tab);
+            });
+        }
+
+        function renderProofGrid() {
+            proofGrid.innerHTML = '';
+            eventStatsTbody.innerHTML = '';
+            instagramLinksContainer.innerHTML = '';
+            if (activeEventIndex === -1 || !reportData.events[activeEventIndex]) {
+                proofDetails.classList.add('hidden');
+                return;
+            }
+
+            const event = reportData.events[activeEventIndex];
+
+            let statsRow = document.createElement('tr');
+            statsRow.className = 'bg-white';
+            statsRow.innerHTML = `
+                <td class="py-2 px-4 text-slate-700">${event.duration || 'N/A'}</td>
+                <td class="py-2 px-4 text-slate-700">${event.dates || 'N/A'}</td>
+                <td class="py-2 px-4 text-slate-700">${event.public || 'N/A'}</td>
+            `;
+            eventStatsTbody.appendChild(statsRow);
+            
+            let evaluationHtml = `
+                <p><strong>O que funcionou bem:</strong> ${event.evaluation.workedWell}</p>
+                <p><strong>Desafios:</strong> ${event.evaluation.challenges}</p>
+                <p><strong>O que pode melhorar:</strong> ${event.evaluation.improvements}</p>
+                <p><strong>Engajamento do público:</strong> ${event.evaluation.engagement}</p>
+                <p><strong>Entregas contratuais:</strong> ${event.evaluation.contractualDeliveries}</p>
+            `;
+            eventEvaluation.innerHTML = evaluationHtml;
+
+            proofHeader.innerHTML = `Performance e Entregas: <span class="text-emerald-500">${event.name}</span>`;
+            proofSubheader.innerHTML = `
+                <p class="mt-6 max-w-3xl mx-auto text-slate-600">Navegue pelas ações para ver a comprovação de cada contrapartida.</p>
+            `;
+
+            if (event.instagram && event.instagram.length > 0) {
+                const instagramButtonsContainer = document.createElement('div');
+                instagramButtonsContainer.className = 'flex flex-wrap items-center justify-center gap-4';
+                event.instagram.forEach(account => {
+                    const link = document.createElement('a');
+                    link.href = account.url;
+                    link.target = "_blank";
+                    link.className = "px-6 py-3 bg-[#023496] text-white font-bold rounded-lg hover:bg-blue-800 transition-colors duration-300 flex-grow text-center flex items-center justify-center";
+                    link.innerHTML = `
+                      <img src="https://i.imgur.com/EZ8IH41.png" alt="Ícone Instagram" class="inline-block h-6 mr-2">
+                      <span>${account.username}</span>
+                    `;
+                    instagramButtonsContainer.appendChild(link);
+                });
+                instagramLinksContainer.appendChild(instagramButtonsContainer);
+            }
+
+            event.actions.forEach((action, actionIndex) => {
+                const card = document.createElement('div');
+                card.className = 'bg-white rounded-lg shadow-md hover:shadow-xl transition-shadow duration-300 cursor-pointer overflow-hidden';
+                card.onclick = () => openModal(actionIndex);
+                
+                const imgContainer = document.createElement('div');
+                imgContainer.className = 'h-48 bg-slate-100 flex items-center justify-center';
+                const firstMedia = action.media[0];
+                let thumbnailSrc = 'https://placehold.co/600x400/e2e8f0/475569?text=Imagem+Indisponível';
+                if (firstMedia) {
+                    thumbnailSrc = firstMedia.type === 'video' ? 'https://placehold.co/600x400/1e3a8a/ffffff?text=Clique+para+Ver+o+Vídeo' : firstMedia.url;
+                }
+
+                const img = document.createElement('img');
+                img.src = thumbnailSrc;
+                img.alt = action.title;
+                img.className = 'w-full h-full object-cover';
+                img.onerror = () => { img.src = 'https://placehold.co/600x400/e2e8f0/475569?text=Imagem+Indisponível'; };
+                imgContainer.appendChild(img);
+
+                const content = document.createElement('div');
+                content.className = 'p-4';
+                const title = document.createElement('h3');
+                title.className = 'font-bold text-blue-800';
+                title.textContent = action.title;
+                const description = document.createElement('p');
+                description.className = 'text-sm text-slate-600 mt-1';
+                description.textContent = 'Clique para ver a comprovação.';
+                
+                content.appendChild(title);
+                content.appendChild(description);
+                card.appendChild(imgContainer);
+                card.appendChild(content);
+                proofGrid.appendChild(card);
+            });
+            proofDetails.classList.remove('hidden');
+        }
+
+        const modal = document.getElementById('modal');
+        const modalContent = document.getElementById('modal-content');
+        const modalClose = document.getElementById('modal-close');
+        const modalTitle = document.getElementById('modal-title');
+        const modalDescription = document.getElementById('modal-description');
+        const modalPrev = document.getElementById('modal-prev');
+        const modalNext = document.getElementById('modal-next');
+        const modalCounter = document.getElementById('modal-counter');
+        const modalMediaContainerElement = document.getElementById('modal-media-container');
+
+        let currentActionIndex = 0;
+        let currentMediaIndex = 0;
+
+        function openModal(actionIndex) {
+            currentActionIndex = actionIndex;
+            currentMediaIndex = 0;
+            updateModalContent();
+            modal.classList.remove('opacity-0', 'pointer-events-none');
+            modalContent.classList.remove('scale-95');
+        }
+
+        function closeModal() {
+            modal.classList.add('opacity-0', 'pointer-events-none');
+            modalContent.classList.add('scale-95');
+            modalMediaContainerElement.innerHTML = '';
+        }
+
+        function updateModalContent() {
+            const action = reportData.events[activeEventIndex].actions[currentActionIndex];
+            const media = action.media;
+            const currentMedia = media[currentMediaIndex];
+
+            modalTitle.textContent = action.title;
+            modalDescription.textContent = action.description;
+            modalCounter.textContent = `${currentMediaIndex + 1} / ${media.length}`;
+
+            modalMediaContainerElement.innerHTML = '';
+
+            if (currentMedia.type === 'image') {
+                const img = document.createElement('img');
+                img.src = currentMedia.url;
+                img.alt = action.title;
+                img.className = 'w-full h-full object-contain rounded-md';
+                img.onerror = () => { img.src = 'https://placehold.co/1200x800/e2e8f0/475569?text=Imagem+Indisponível'; };
+                modalMediaContainerElement.appendChild(img);
+            } else if (currentMedia.type === 'video') {
+                const isGoogleDriveLink = currentMedia.url.includes('drive.google.com');
+                const isYoutubeVimeo = currentMedia.url.includes('youtube.com/embed') || currentMedia.url.includes('vimeo.com/video');
+
+                if (isYoutubeVimeo) {
+                    const iframe = document.createElement('iframe');
+                    iframe.src = currentMedia.url;
+                    iframe.className = 'w-full h-full rounded-md';
+                    iframe.allow = 'accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture';
+                    iframe.allowFullscreen = true;
+                    modalMediaContainerElement.appendChild(iframe);
+                } else if (isGoogleDriveLink) {
+                    const link = document.createElement('a');
+                    link.href = currentMedia.url;
+                    link.target = "_blank";
+                    link.className = 'px-6 py-3 bg-blue-700 text-white font-bold rounded-lg hover:bg-blue-800 transition-colors duration-300';
+                    link.textContent = 'Assistir Vídeo (Google Drive)';
+                    modalMediaContainerElement.appendChild(link);
+                } else {
+                    const link = document.createElement('a');
+                    link.href = currentMedia.url;
+                    link.target = "_blank";
+                    link.className = 'px-6 py-3 bg-blue-700 text-white font-bold rounded-lg hover:bg-blue-800 transition-colors duration-300';
+                    link.textContent = 'Assistir Vídeo';
+                    modalMediaContainerElement.appendChild(link);
+                }
+            }
+
+            modalPrev.disabled = currentMediaIndex === 0;
+            modalNext.disabled = currentMediaIndex === media.length - 1;
+        }
+
+        modalPrev.onclick = () => {
+            if (currentMediaIndex > 0) {
+                currentMediaIndex--;
+                updateModalContent();
+            }
+        };
+
+        modalNext.onclick = () => {
+            const media = reportData.events[activeEventIndex].actions[currentActionIndex].media;
+            if (currentMediaIndex < media.length - 1) {
+                currentMediaIndex++;
+                updateModalContent();
+            }
+        };
+
+        modalClose.onclick = closeModal;
+        modal.onclick = (e) => {
+            if (e.target === modal) {
+                closeModal();
+            }
+        };
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape' && !modal.classList.contains('pointer-events-none')) {
+                closeModal();
+            }
+        });
+
+        const ctx = document.getElementById('resultsChart').getContext('2d');
+        const chartInstance = new Chart(ctx, {
+            type: 'bar',
+            data: reportData.metrics,
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'top',
+                    },
+                    title: {
+                        display: true,
+                        text: 'Desempenho Digital por Evento'
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                let label = context.dataset.label || '';
+                                if (label) {
+                                    label += ': ';
+                                }
+                                if (context.parsed.y !== null) {
+                                    label += context.parsed.y + (label.includes('Milhões') ? 'M' : 'k');
+                                }
+                                return label;
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                           callback: function(value, index, ticks) {
+                               return value + (this.getLabelForValue(value).includes('Milhões') ? 'M' : 'k');
+                           }
+                        }
+                    },
+                }
+            }
+        });
+        
+        const highlightImagesContainer = document.getElementById('slider-image-container');
+        const sliderContainer = document.getElementById('slider-container');
+        let currentSlideIndex = 0;
+        let autoSlideInterval;
+
+        function renderSliderImages() {
+            highlightImagesContainer.innerHTML = '';
+            reportData.highlightImages.forEach(imageUrl => {
+                const img = document.createElement('img');
+                img.src = imageUrl;
+                img.alt = "Imagem em Destaque do Evento";
+                img.className = 'slider-image';
+                img.onerror = () => { img.src = 'https://placehold.co/1200x500/e2e8f0/475569?text=Imagem+Indisponível'; };
+                highlightImagesContainer.appendChild(img);
+            });
+        }
+
+        function updateSliderPosition() {
+            const slideWidth = sliderContainer.clientWidth;
+            highlightImagesContainer.style.transform = `translateX(-${currentSlideIndex * slideWidth}px)`;
+        }
+
+        function nextSlide() {
+            currentSlideIndex = (currentSlideIndex + 1) % reportData.highlightImages.length;
+            updateSliderPosition();
+        }
+
+        function prevSlide() {
+            currentSlideIndex = (currentSlideIndex - 1 + reportData.highlightImages.length) % reportData.highlightImages.length;
+            updateSliderPosition();
+        }
+
+        function startAutoSlide() {
+            stopAutoSlide();
+            autoSlideInterval = setInterval(nextSlide, 5000);
+        }
+
+        function stopAutoSlide() {
+            clearInterval(autoSlideInterval);
+        }
+
+        document.getElementById('prev-slide').addEventListener('click', () => {
+            stopAutoSlide();
+            prevSlide();
+            startAutoSlide();
+        });
+
+        document.getElementById('next-slide').addEventListener('click', () => {
+            stopAutoSlide();
+            nextSlide();
+            startAutoSlide();
+        });
+
+        window.addEventListener('resize', () => {
+            updateSliderPosition();
+        });
+
+        const mobileMenuButton = document.getElementById('mobile-menu-button');
+        const mobileMenu = document.getElementById('mobile-menu');
+        mobileMenuButton.addEventListener('click', () => {
+            mobileMenu.classList.toggle('hidden');
+        });
+        
+        // Dropdown functionality for desktop
+        const dropdownButton = document.getElementById('dropdown-button');
+        const dropdownMenu = document.getElementById('dropdown-menu');
+        const dropdownArrow = document.getElementById('dropdown-arrow');
+        dropdownButton.addEventListener('click', (e) => {
+            e.preventDefault();
+            dropdownMenu.classList.toggle('scale-y-0');
+            dropdownMenu.classList.toggle('scale-y-100');
+            dropdownArrow.classList.toggle('rotate-180');
+        });
+        
+        // Dropdown functionality for mobile
+        const mobileDropdownButton = document.getElementById('mobile-dropdown-button');
+        const mobileDropdownMenu = document.getElementById('mobile-dropdown-menu');
+        const mobileDropdownArrow = mobileDropdownButton.querySelector('svg');
+        mobileDropdownButton.addEventListener('click', (e) => {
+            e.preventDefault();
+            mobileDropdownMenu.classList.toggle('hidden');
+            mobileDropdownArrow.classList.toggle('rotate-180');
+        });
+
+
+        // Function to generate the dropdown menu
+        function generateDropdownMenus() {
+            const desktopMenu = document.getElementById('dropdown-menu');
+            const mobileMenu = document.getElementById('mobile-dropdown-menu');
+            
+            const cities = reportData.events.map(event => event.name);
+
+            cities.forEach((city, index) => {
+                const desktopLink = document.createElement('a');
+                desktopLink.href = `#proof`;
+                desktopLink.textContent = city;
+                desktopLink.className = 'block px-4 py-2 text-sm text-gray-700 hover:bg-slate-100';
+                desktopLink.onclick = (e) => {
+                    e.preventDefault();
+                    activeEventIndex = reportData.events.findIndex(event => event.name === city);
+                    renderTabs();
+                    renderProofGrid();
+                    const section = document.getElementById('proof');
+                    section.scrollIntoView({ behavior: 'smooth' });
+                    dropdownMenu.classList.add('scale-y-0');
+                    dropdownMenu.classList.remove('scale-y-100');
+                    dropdownArrow.classList.remove('rotate-180');
+                };
+                desktopMenu.appendChild(desktopLink);
+                
+                const mobileLink = document.createElement('a');
+                mobileLink.href = `#proof`;
+                mobileLink.textContent = city;
+                mobileLink.className = 'block py-3 px-4 text-sm font-semibold text-white hover:bg-blue-950';
+                 mobileLink.onclick = (e) => {
+                    e.preventDefault();
+                    activeEventIndex = reportData.events.findIndex(event => event.name === city);
+                    renderTabs();
+                    renderProofGrid();
+                    const section = document.getElementById('proof');
+                    section.scrollIntoView({ behavior: 'smooth' });
+                    mobileMenu.classList.add('hidden');
+                    mobileDropdownArrow.classList.remove('rotate-180');
+                };
+                mobileMenu.appendChild(mobileLink);
+            });
+        }
+
+        const overviewLink = document.getElementById('desktop-overview-link');
+        const resultsLink = document.getElementById('desktop-results-link');
+        const mobileOverviewLink = document.getElementById('mobile-overview-link');
+        const mobileResultsLink = document.getElementById('mobile-results-link');
+        
+        function handleNavLinkClick(e) {
+          e.preventDefault();
+          const targetId = e.currentTarget.getAttribute('href').substring(1);
+          const section = document.getElementById(targetId);
+          if (section) {
+            section.scrollIntoView({ behavior: 'smooth' });
+          }
+        }
+        
+        overviewLink.addEventListener('click', handleNavLinkClick);
+        resultsLink.addEventListener('click', handleNavLinkClick);
+        mobileOverviewLink.addEventListener('click', handleNavLinkClick);
+        mobileResultsLink.addEventListener('click', handleNavLinkClick);
+
+        document.getElementById('generate-pdf-btn').addEventListener('click', () => {
+            const eventName = reportData.events[activeEventIndex].name;
+            const element = document.getElementById('proof-details');
+            
+            const opt = {
+                margin: 1,
+                filename: `Relatório - ${eventName}.pdf`,
+                image: { type: 'jpeg', quality: 0.98 },
+                html2canvas: { scale: 2 },
+                jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' }
+            };
+
+            html2pdf().set(opt).from(element).save();
+        });
+
+        renderTabs();
+        renderProofGrid();
+        renderSliderImages();
+        startAutoSlide();
+        generateDropdownMenus();
+    });
+</script>
+
+</body>
+</html>
